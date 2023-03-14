@@ -1,190 +1,119 @@
-// create a object of all the list of alarms and its data so that we can easlily access them while iteration
-var alarmsObj = [];
+// ===========  Initial Setup before functions  ===========
+let typingTimer;                //timer identifier
+let doneTypingInterval = 600;  //time in ms (1 second = 1000)
+let myInput = document.getElementById('searchBar');
+const resultsContainer = document.getElementById('results'); // element to display results within
 
-// ----------- display current data and time ----------- //
-
-var currentDay = document.getElementById('day');
-var currentDate = document.getElementById('date');
-var currentHour = document.getElementById('hour');
-var currentSec = document.getElementById('second');
-
-function displayCurrentTime(){
-
-    var date = new Date();
-
-    let day = String(date).substring(0, 3);
-
-    if(day === 'Mon'){
-        day = 'Monday';
+// ===========  Start the countdown on 'keyup'  ===========
+myInput.addEventListener('keyup', async () => {
+    removeAllChildNodes(resultsContainer);
+    clearTimeout(typingTimer);
+    if (myInput.value.length >= 3) {
+        // status.innerHTML = 'Searching...';
+        typingTimer = setTimeout(doneTyping, doneTypingInterval);
     }
+});
 
-    else if(day === 'Tue'){
-        day = 'Tuesday';
-    }
+// ===========  User is "finished typing," do something  ===========
+function doneTyping () {
+    // fetch super hero data
+    fetchSuperHeroes(myInput.value);
+}
 
-    else if(day === 'Wed'){
-        day = 'Wednesday';
-    }
+// ===========  Clear results container (remove previous search resutls)  ===========
+function removeAllChildNodes(parent) {
+    // console.log('Parent:: ', parent);
+    document.querySelectorAll('.list-group-item').forEach(
+        child => child.remove());
+}
 
-    else if(day === 'Thu'){
-        day = 'Thursday';
-    }
-
-    else if(day === 'Fri'){
-        day = 'Friday';
-    }
-
-    else if(day === 'Sat'){
-        day = 'Saturday';
-    }
-
-    else if(day === 'Sun'){
-        day = 'Sunday';
-    }
-
-    let hour = date.getHours();
-
-    hour = hour % 12;
-
-    if(hour == 0){
-        hour = 12;
-    }
-
-    if(Number(hour) < 10){
-        hour = '0' + "" + hour;
-    }
-
-    let minutes = date.getMinutes();
-    if(Number(minutes) < 10){
-        minutes = '0' + "" + minutes;
-    }
-    let second = date.getSeconds();
-
-    if(second < 10){
-        second = '0' + '' + second
-    }
-
-    currentDay.innerText = day;
-    currentDate.innerText = String(date).substring(4, 16);
-    currentHour.innerText = hour + ":" + minutes;
-    currentSec.innerText = second + '  SEC';
-
-    // check if the current time is in alarms list, if yes alert user then delete it from alarmsObj
-
-    for(let i=0; i<alarmsObj.length; i++){
-        if((currentHour.innerText + ':' + second) == `${alarmsObj[i].hour}:${alarmsObj[i].minute}:${alarmsObj[i].seconds}`){
-            
-            alert("Alarm Ringing");
-            alarmsObj.splice(i, 1);
+// ===========  Display matching results on DOM  ===========
+function showResults(data) {
+    let maxResultsToDisplay = 1;
+    data.results.map(superHero => {
+        // console.log(superHero);
+        if (maxResultsToDisplay > 10) {
+            return;
         }
-    }
-
-    setTimeout(displayCurrentTime, 1000);
-}
-
-document.body.onload = function(){
-    displayCurrentTime();
-}
-
-// ---- set alarms | Take input from user in hour minutes and seconds ----- //
-var userHours = document.getElementById('getUserHours');
-var userMinutes = document.getElementById('getUserMinutes');
-var userSeconds = document.getElementById('getUserSeconds');
-var addAlarmButton = document.getElementById('add-alarm');
-
-// -------- ON ADD ALARM BUTTON CLICK EVENT LISTENER ----------- //
-
-function createNewAlarmDOM(){
-
-    if(String(userHours.value).length == 1){
-        userHours.value = '0' + '' + String(userHours.value);
-    }
-    
-    if(String(userMinutes.value).length == 1){
-        userMinutes.value = '0' + '' + String(userMinutes.value);
-    }
-
-    console.log(`${userHours.value}:${userMinutes.value}:${userSeconds.value}`);
-
-    if(userHours.value == '' || userHours.value == null || userHours.value == 'undefined' || userHours.value == undefined || userHours.value == '00'){
-        alert("Its a 12 hour format clock, please set appropriate time");
-        return;
-    }
-
-    const newAlarmObject = {
-        hour: userHours.value,
-        minute: userMinutes.value,
-        seconds: userSeconds.value,
-        combinedTime: `${userHours.value}:${userMinutes.value}:${userSeconds.value}`
-    }
-
-    alarmsObj.push(newAlarmObject);
-
-    // now create a div in DOM
-    var alarmItem = document.createElement('div');
-    alarmItem.classList.add('alarm-items');
-
-        // elements inside alarmItems
-
-        var logo = document.createElement('img');
-        logo.setAttribute('src', 'icons8-retro-alarm-clock-24.png');
-        logo.classList.add('logo');
+        maxResultsToDisplay++;
         
-        var section = document.createElement('section');
-        section.classList.add('time-day');
-
-            // elements inside time-day
-            var alarmTime = document.createElement('span');
-            alarmTime.classList.add('time');
-            alarmTime.innerHTML = userHours.value + ":" + userMinutes.value + ":" + userSeconds.value
-
-            var day = document.createElement('small');
-            day.classList.add('day');
-            day.innerHTML = currentDay.innerHTML;
-
-        section.appendChild(alarmTime);
-        section.appendChild(day);
-
-        var delButton = document.createElement('img');
-        delButton.classList.add('delete');
-        delButton.setAttribute('src', 'icons8-delete-26.png');
-
-        delButton.onclick = function(){
-
-            // first remove the data from alarmsObj
-            const currentAlarmTime = this.parentNode.childNodes[1].childNodes[0].innerHTML;
-
-            for(let i=0; i<alarmsObj.length; i++){
-                if(alarmsObj[i].combinedTime == currentAlarmTime){
-                    alarmsObj.splice(i, 1);
-                }
-            }
-
-            this.parentNode.remove();
-
-        }
-
-    alarmItem.appendChild(logo);
-    alarmItem.appendChild(section);
-    alarmItem.appendChild(delButton);
-
-    document.getElementById('alarm-items-wrapper').appendChild(alarmItem);
-
-    // slide over to ALARM tab it is for better user experience
-    // Its simple just toggle active and show classes from nav bar and tab content
-
-    document.getElementById('nav-home-tab').classList.toggle('active');
-    document.getElementById('nav-home').classList.toggle('show');
-    document.getElementById('nav-home').classList.toggle('active');
-
-    // -------- here profile is used because this tab component is used from BOOTSTRAP so i have not changed the names because there was just
-    // --------- one component imported
-    document.getElementById('nav-profile-tab').classList.toggle('active');
-    document.getElementById('nav-profile').classList.toggle('show');
-    document.getElementById('nav-profile').classList.toggle('active');
-
-    // console.log(alarmsObj);
+        // 1. Create and Insert HTML
+        let ul = document.createElement("ul");
+        ul.className = "list-group";
+        
+        let anchorTag = document.createElement('a');
+        anchorTag.className = "list-group-item list-group-item-action small";
+        anchorTag.title = superHero.biography['full-name'];
+        anchorTag.href = "superhero.html?id=" + superHero.id;
+        
+        let flexDiv = document.createElement('div');
+        flexDiv.className = "d-flex";
+        
+        let imgContainer = document.createElement('div');
+        
+        let heroAvatar = document.createElement('img');
+        heroAvatar.className = "img-fluid";
+        heroAvatar.src = superHero.image.url;
+        heroAvatar.alt = superHero.name + "'s thumbnail";
+        heroAvatar.height = 30;
+        heroAvatar.width = 50;
+        
+        let infoContainer = document.createElement('div');
+        infoContainer.className = "ml-3";
+        
+        let characterName = document.createElement('div');
+        characterName.innerHTML = superHero.name;
+        characterName.className = "font-weight-bold";
+        
+        let realName = document.createElement('div');
+        realName.className = "text-muted small";
+        realName.innerHTML = superHero.biography['full-name'];
+        
+        let group = document.createElement('div');
+        group.innerHTML = superHero.connections['group-affiliation'];
+                
+        ul.append(anchorTag);
+        anchorTag.append(flexDiv);
+        flexDiv.append(imgContainer, infoContainer);
+        imgContainer.append(heroAvatar);
+        infoContainer.append(characterName, realName, group);
+        
+        resultsContainer.append(ul); // adds all superheroes cards to DOM
+    });
 }
 
-addAlarmButton.addEventListener('click', createNewAlarmDOM);
-Footer
+// ===========  No Matching results found  ===========
+function noResult() {
+    let ul = document.createElement("ul");
+    ul.className = "list-group";
+    
+    let anchorTag = document.createElement('a');
+    anchorTag.className = "list-group-item list-group-item-action small";
+    anchorTag.href = "javascipt:void(0)";
+    
+    let span = document.createElement('span');
+    span.innerHTML = "No match found!";
+    
+    ul.append(anchorTag);
+    anchorTag.append(span);
+    resultsContainer.append(ul);
+}
+
+//  ===========  Hit API and Fetch the matching characters  ===========
+async function fetchSuperHeroes(input) {
+    try {
+        const response = await fetch(`https://www.superheroapi.com/api.php/2496364390592143/search/` + input)
+        .then(response => response.json()) // converting response to json
+        .then(
+            function(data) {
+                // to show the results on the page
+                if (data.response == "success") {
+                    showResults(data);
+                } else
+                    noResult();
+            }
+            );
+    } catch (err) {
+        console.log('Inside catch', err);
+    }
+}
